@@ -38,10 +38,56 @@ def index():
 def about():
     return render_template("about.html")
 
-@app.route("/post")
-def post():
-    articles = Article.query.order_by(Article.date).all()
-    return render_template("post.html", articles=articles)
+
+@app.route("/posts")
+def posts():
+    articles = Article.query.order_by(Article.date.desc()).all()
+    return render_template("posts.html", articles=articles)
+
+
+@app.route("/posts/<int:id>")
+def posts_detail(id):
+    article = Article.query.get(id)
+    return render_template("posts_detail.html", article=article)
+
+
+@app.route("/posts/<int:id>/delete")
+def posts_delete(id):
+    article = Article.query.get_or_404(id)
+
+    try:
+        db.session.delete(article)
+        db.session.commit()
+        return redirect('/posts')
+    except:
+        return "When deleting article happen error"
+
+@app.route("/feedback")
+def feedback():
+    return render_template("feedback.html")
+
+
+@app.route("/posts/<int:id>/update", methods=["POST", "GET"])
+def posts_update(id):
+    article = Article.query.get(id)
+    if request.method == "POST":
+        article.title = request.form['title']
+        article.intro = request.form['intro']
+        article.text = request.form['text']
+
+
+
+        try:
+            db.session.commit()
+            return redirect('/posts')
+        except:
+            return "When you add article happen error"
+
+    else:
+        article = Article.query.get(id)
+        return render_template("posts_update.html", article=article)
+
+
 
 
 @app.route("/create-article", methods=["POST", "GET"])
@@ -56,7 +102,7 @@ def create_article():
         try:
             db.session.add(article)
             db.session.commit()
-            return redirect('/')
+            return redirect('/posts')
         except:
             return "When you add article happen error"
 
